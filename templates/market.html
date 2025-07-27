@@ -1,0 +1,272 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/market.css">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Market Overview Cards -->
+    <div class="market-overview">
+        <div class="overview-card">
+            <div class="overview-icon">📈</div>
+            <div class="overview-content">
+                <div class="overview-number">{{ insights.total_crops }}</div>
+                <div class="overview-label">कुल फसलें</div>
+            </div>
+        </div>
+        <div class="overview-card success">
+            <div class="overview-icon">🟢</div>
+            <div class="overview-content">
+                <div class="overview-number">{{ insights.rising_crops }}</div>
+                <div class="overview-label">बढ़ती कीमतें</div>
+            </div>
+        </div>
+        <div class="overview-card danger">
+            <div class="overview-icon">🔴</div>
+            <div class="overview-content">
+                <div class="overview-number">{{ insights.falling_crops }}</div>
+                <div class="overview-label">गिरती कीमतें</div>
+            </div>
+        </div>
+        <div class="overview-card {{ 'success' if insights.avg_change > 0 else 'danger' }}">
+            <div class="overview-icon">{{ '📊' if insights.avg_change > 0 else '📉' }}</div>
+            <div class="overview-content">
+                <div class="overview-number">{{ insights.avg_change }}%</div>
+                <div class="overview-label">औसत बदलाव</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Market Sentiment & Insights -->
+    <div class="market-insights-section">
+        <div class="card">
+            <div class="card-header">
+                <h2 class="card-title">📊 मार्केट इनसाइट्स</h2>
+                <div class="sentiment-badge {{ 'bullish' if insights.market_sentiment == 'Bullish' else 'bearish' }}">
+                    {{ insights.market_sentiment }} बाजार
+                </div>
+            </div>
+
+            <div class="insights-grid">
+                <div class="insight-item">
+                    <h4>सबसे ज्यादा बढ़ने वाली फसल</h4>
+                    {% if insights.top_gainer %}
+                    <div class="crop-highlight success">
+                        <span class="crop-name">{{ insights.top_gainer.crop_name }}</span>
+                        <span class="price-change">+{{ insights.top_gainer.percentage_change }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="insight-item">
+                    <h4>सबसे ज्यादा गिरने वाली फसल</h4>
+                    {% if insights.top_loser %}
+                    <div class="crop-highlight danger">
+                        <span class="crop-name">{{ insights.top_loser.crop_name }}</span>
+                        <span class="price-change">{{ insights.top_loser.percentage_change }}%</span>
+                    </div>
+                    {% endif %}
+                </div>
+
+                <div class="insight-item">
+                    <h4>मार्केट ट्रेंड</h4>
+                    <div class="trend-indicator">
+                        <span class="trend-arrow {{ 'up' if insights.avg_change > 0 else 'down' }}">
+                            {{ '↗️' if insights.avg_change > 0 else '↘️' }}
+                        </span>
+                        <span>{{ 'तेजी की ओर' if insights.avg_change > 0 else 'मंदी की ओर' }}</span>
+                    </div>
+                </div>
+
+                <div class="insight-item">
+                    <h4>आज की सिफारिश</h4>
+                    <div class="recommendation">
+                        {% if insights.avg_change > 5 %}
+                        <span class="rec-text">बेचने का अच्छा समय</span>
+                        {% elif insights.avg_change < -5 %}
+                        <span class="rec-text">खरीदने का अच्छा समय</span>
+                        {% else %}
+                        <span class="rec-text">बाजार का इंतजार करें</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Price Chart Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">📈 मूल्य ट्रेंड चार्ट</h2>
+            <div class="chart-controls">
+                <button class="chart-btn active" onclick="changeChartPeriod('1D')">1D</button>
+                <button class="chart-btn" onclick="changeChartPeriod('1W')">1W</button>
+                <button class="chart-btn" onclick="changeChartPeriod('1M')">1M</button>
+                <button class="chart-btn" onclick="changeChartPeriod('3M')">3M</button>
+            </div>
+        </div>
+        <div class="price-chart" id="priceChart">
+            <canvas id="chartCanvas" width="800" height="300"></canvas>
+        </div>
+    </div>
+
+    <!-- Market Filters -->
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">📊 लाइव मंडी भाव</h1>
+            <div class="live-indicator">
+                <div class="live-dot"></div>
+                LIVE
+            </div>
+        </div>
+
+        <div class="market-filters">
+            <button class="filter-button {{ 'active' if current_filter == 'all' else '' }}"
+                    onclick="filterMarket('all')">सभी फसलें</button>
+            <button class="filter-button {{ 'active' if current_filter == 'grains' else '' }}"
+                    onclick="filterMarket('grains')">अनाज</button>
+            <button class="filter-button {{ 'active' if current_filter == 'vegetables' else '' }}"
+                    onclick="filterMarket('vegetables')">सब्जियां</button>
+            <button class="filter-button {{ 'active' if current_filter == 'fruits' else '' }}"
+                    onclick="filterMarket('fruits')">फल</button>
+            <button class="filter-button {{ 'active' if current_filter == 'spices' else '' }}"
+                    onclick="filterMarket('spices')">मसाले</button>
+        </div>
+
+        <!-- Advanced Market Table -->
+        <div class="market-table-container">
+            <table class="market-table">
+                <thead>
+                    <tr>
+                        <th>फसल</th>
+                        <th>वर्तमान भाव</th>
+                        <th>परिवर्तन</th>
+                        <th>% परिवर्तन</th>
+                        <th>मंडी</th>
+                        <th>ट्रेंड</th>
+                        <th>एक्शन</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for market in market_data %}
+                    <tr class="market-row">
+                        <td class="crop-cell">
+                            <div class="crop-info">
+                                <span class="crop-icon">🌾</span>
+                                <span class="crop-name">{{ market.crop_name }}</span>
+                            </div>
+                        </td>
+                        <td class="price-cell">
+                            <span class="current-price">₹{{ market.current_price }}</span>
+                            <span class="price-unit">/क्विंटल</span>
+                        </td>
+                        <td class="change-cell">
+                            <span class="price-change {{ 'positive' if market.price_change > 0 else 'negative' }}">
+                                {{ '+' if market.price_change > 0 else '' }}₹{{ market.price_change }}
+                            </span>
+                        </td>
+                        <td class="percentage-cell">
+                            <span class="percentage-change {{ 'positive' if market.percentage_change > 0 else 'negative' }}">
+                                {{ '+' if market.percentage_change > 0 else '' }}{{ market.percentage_change }}%
+                            </span>
+                        </td>
+                        <td class="location-cell">{{ market.market_location }}</td>
+                        <td class="trend-cell">
+                            <span class="trend-indicator {{ market.trend }}">
+                                {{ '📈' if market.trend == 'up' else '📉' }}
+                            </span>
+                        </td>
+                        <td class="action-cell">
+                            <button class="action-btn" onclick="getDetailedAnalysis('{{ market.crop_name }}')">
+                                विश्लेषण
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Price Alerts Section -->
+    <div class="card">
+        <div class="card-header">
+            <h2 class="card-title">🔔 प्राइस अलर्ट सेट करें</h2>
+        </div>
+        <div class="alert-form">
+            <div class="form-group">
+                <label>फसल चुनें:</label>
+                <select id="alertCrop">
+                    {% for market in market_data %}
+                    <option value="{{ market.crop_name }}">{{ market.crop_name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="form-group">
+                <label>टारगेट प्राइस (₹):</label>
+                <input type="number" id="alertPrice" placeholder="₹2000">
+            </div>
+            <div class="form-group">
+                <label>अलर्ट टाइप:</label>
+                <select id="alertType">
+                    <option value="above">जब दाम इससे ऊपर जाए</option>
+                    <option value="below">जब दाम इससे नीचे आए</option>
+                </select>
+            </div>
+            <button class="btn-primary" onclick="setAlert()">अलर्ट सेट करें</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/market.js"></script>
+<script>
+// Initialize chart
+document.addEventListener('DOMContentLoaded', function() {
+    initializeChart();
+    setInterval(updateMarketData, 30000); // Update every 30 seconds
+});
+
+function filterMarket(category) {
+    window.location.href = `/market?filter_type=${category}`;
+}
+
+function getDetailedAnalysis(crop) {
+    // Fetch detailed analysis for the crop
+    fetch(`/api/crop-analysis/${crop}`)
+        .then(response => response.json())
+        .then(data => {
+            showDetailedAnalysis(data);
+        })
+        .catch(error => {
+            showNotification('विश्लेषण लोड करने में समस्या', 'error');
+        });
+}
+
+function setAlert() {
+    const crop = document.getElementById('alertCrop').value;
+    const price = document.getElementById('alertPrice').value;
+    const type = document.getElementById('alertType').value;
+
+    if (!price) {
+        showNotification('कृपया टारगेट प्राइस डालें', 'warning');
+        return;
+    }
+
+    // Save alert
+    const alert = { crop, price, type, timestamp: new Date() };
+    saveAlert(alert);
+    showNotification(`${crop} के लिए अलर्ट सेट हो गया`, 'success');
+}
+
+function changeChartPeriod(period) {
+    document.querySelectorAll('.chart-btn').forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    updateChart(period);
+}
+</script>
+{% endblock %}

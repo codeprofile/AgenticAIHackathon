@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}प्रोजेक्ट किसान{% endblock %}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo" onclick="window.location.href='/'">
+                🌾 प्रोजेक्ट किसान
+            </div>
+            <div class="nav-menu">
+                <a href="/" class="nav-item {% if request.url.path == '/' %}active{% endif %}">
+                    🏠 होम
+                </a>
+                <a href="/market" class="nav-item {% if request.url.path == '/market' %}active{% endif %}">
+                    📊 मार्केट डैशबोर्ड
+                </a>
+                <a href="/schemes" class="nav-item {% if request.url.path == '/schemes' %}active{% endif %}">
+                    🏛️ सरकारी योजनाएं
+                </a>
+                <a href="/profile" class="nav-item {% if request.url.path == '/profile' %}active{% endif %}">
+                    👤 किसान प्रोफाइल
+                </a>
+            </div>
+            <div class="location-badge" id="locationInfo">
+                📍 मुंबई, महाराष्ट्र
+            </div>
+        </div>
+    </nav>
+
+    <!-- Mobile Navigation -->
+    <div class="mobile-nav">
+        <div class="mobile-nav-items">
+            <a href="/" class="mobile-nav-item {% if request.url.path == '/' %}active{% endif %}">
+                <div class="mobile-nav-icon">🏠</div>
+                <span>होम</span>
+            </a>
+            <a href="/market" class="mobile-nav-item {% if request.url.path == '/market' %}active{% endif %}">
+                <div class="mobile-nav-icon">📊</div>
+                <span>मार्केट</span>
+            </a>
+            <a href="/schemes" class="mobile-nav-item {% if request.url.path == '/schemes' %}active{% endif %}">
+                <div class="mobile-nav-icon">🏛️</div>
+                <span>योजनाएं</span>
+            </a>
+            <a href="/profile" class="mobile-nav-item {% if request.url.path == '/profile' %}active{% endif %}">
+                <div class="mobile-nav-icon">👤</div>
+                <span>प्रोफाइल</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Notification -->
+    <div class="notification" id="notification"></div>
+
+    <!-- Scripts -->
+    <script src="/static/js/main.js"></script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

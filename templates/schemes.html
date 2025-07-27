@@ -1,0 +1,294 @@
+{% extends "base.html" %}
+
+{% block title %}{{ page_title }}{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h1 class="card-title">🏛️ सरकारी योजनाएं</h1>
+            <div class="schemes-summary">
+                <span class="schemes-count">{{ schemes|length }} योजनाएं उपलब्ध</span>
+            </div>
+        </div>
+
+        <!-- Quick Eligibility Check -->
+        <div class="eligibility-checker">
+            <h3>🔍 तुरंत पात्रता जांचें</h3>
+            <div class="eligibility-form">
+                <div class="form-row">
+                    <div class="form-group">
+                        <label>आपकी भूमि (हेक्टेयर में):</label>
+                        <input type="number" id="landSize" placeholder="2">
+                    </div>
+                    <div class="form-group">
+                        <label>वार्षिक आय:</label>
+                        <select id="annualIncome">
+                            <option value="below-2lakh">₹2 लाख से कम</option>
+                            <option value="2-5lakh">₹2-5 लाख</option>
+                            <option value="above-5lakh">₹5 लाख से अधिक</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>किसान का प्रकार:</label>
+                        <select id="farmerType">
+                            <option value="small">छोटा किसान</option>
+                            <option value="marginal">सीमांत किसान</option>
+                            <option value="large">बड़ा किसान</option>
+                        </select>
+                    </div>
+                </div>
+                <button class="btn-primary" onclick="checkEligibility()">पात्रता जांचें</button>
+            </div>
+            <div class="eligibility-results" id="eligibilityResults" style="display: none;">
+                <h4>आपके लिए उपलब्ध योजनाएं:</h4>
+                <div id="eligibleSchemes"></div>
+            </div>
+        </div>
+
+        <div class="scheme-grid">
+            {% for scheme in schemes %}
+            <div class="scheme-card" data-scheme="{{ scheme.scheme_name }}">
+                <div class="scheme-header">
+                    <div class="scheme-icon">💰</div>
+                    <div class="scheme-title">{{ scheme.scheme_name }}</div>
+                </div>
+                <div class="scheme-amount">{{ scheme.amount }}</div>
+                <div class="scheme-description">{{ scheme.description }}</div>
+
+                <div class="scheme-details">
+                    <h4>मुख्य विशेषताएं:</h4>
+                    <ul class="scheme-features">
+                        {% for feature in scheme.features %}
+                        <li>{{ feature }}</li>
+                        {% endfor %}
+                    </ul>
+
+                    <h4>पात्रता शर्तें:</h4>
+                    <ul class="scheme-eligibility">
+                        {% for criteria in scheme.eligibility %}
+                        <li>{{ criteria }}</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+
+                <div class="scheme-actions">
+                    <button class="btn-primary" onclick="applyScheme('{{ scheme.scheme_name }}')">
+                        📝 आवेदन करें
+                    </button>
+                    <button class="btn-secondary" onclick="getSchemeDetails('{{ scheme.scheme_name }}')">
+                        ℹ️ और जानें
+                    </button>
+                </div>
+
+                <div class="scheme-status">
+                    <div class="status-item">
+                        <span class="status-label">आवेदन की स्थिति:</span>
+                        <span class="status-value online">ऑनलाइन</span>
+                    </div>
+                    <div class="status-item">
+                        <span class="status-label">प्रोसेसिंग टाइम:</span>
+                        <span class="status-value">15-30 दिन</span>
+                    </div>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Additional Schemes Section -->
+        <div class="additional-schemes">
+            <h2>🌟 अन्य महत्वपूर्ण योजनाएं</h2>
+            <div class="additional-scheme-grid">
+                <div class="additional-scheme-card">
+                    <div class="scheme-icon">🚜</div>
+                    <h3>कृषि यंत्र सब्सिडी</h3>
+                    <p>40-50% सब्सिडी पर ट्रैक्टर और अन्य कृषि उपकरण</p>
+                    <button class="btn-outline" onclick="applyScheme('machinery')">आवेदन करें</button>
+                </div>
+
+                <div class="additional-scheme-card">
+                    <div class="scheme-icon">💧</div>
+                    <h3>PM कृषि सिंचाई योजना</h3>
+                    <p>75% सब्सिडी पर ड्रिप और स्प्रिंकलर सिस्टम</p>
+                    <button class="btn-outline" onclick="applyScheme('irrigation')">आवेदन करें</button>
+                </div>
+
+                <div class="additional-scheme-card">
+                    <div class="scheme-icon">🌱</div>
+                    <h3>PM कुसुम योजना</h3>
+                    <p>90% सब्सिडी पर सोलर पंप और सोलर पावर प्लांट</p>
+                    <button class="btn-outline" onclick="applyScheme('kusum')">आवेदन करें</button>
+                </div>
+
+                <div class="additional-scheme-card">
+                    <div class="scheme-icon">🏦</div>
+                    <h3>किसान मानधन योजना</h3>
+                    <p>₹3000 मासिक पेंशन 60 वर्ष की आयु के बाद</p>
+                    <button class="btn-outline" onclick="applyScheme('pension')">आवेदन करें</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Tracking -->
+        <div class="application-tracking">
+            <h2>📋 आवेदन ट्रैकिंग</h2>
+            <div class="tracking-form">
+                <input type="text" id="applicationId" placeholder="आवेदन संख्या डालें">
+                <button class="btn-primary" onclick="trackApplication()">स्थिति देखें</button>
+            </div>
+            <div class="tracking-results" id="trackingResults" style="display: none;">
+                <!-- Results will be populated here -->
+            </div>
+        </div>
+
+        <!-- Help & Support -->
+        <div class="help-support">
+            <h2>❓ सहायता और समर्थन</h2>
+            <div class="support-options">
+                <div class="support-card">
+                    <div class="support-icon">📞</div>
+                    <h3>हेल्पलाइन</h3>
+                    <p>किसान कॉल सेंटर: <strong>1800-180-1551</strong></p>
+                    <p>समय: सुबह 6 बजे से रात 10 बजे तक</p>
+                </div>
+
+                <div class="support-card">
+                    <div class="support-icon">🌐</div>
+                    <h3>ऑनलाइन पोर्टल</h3>
+                    <p>PM-KISAN: pmkisan.gov.in</p>
+                    <p>कृषि मंत्रालय: agriculture.gov.in</p>
+                </div>
+
+                <div class="support-card">
+                    <div class="support-icon">📧</div>
+                    <h3>ईमेल सपोर्ट</h3>
+                    <p>pmkisan-ict@gov.in</p>
+                    <p>24-48 घंटे में जवाब</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function checkEligibility() {
+    const landSize = document.getElementById('landSize').value;
+    const income = document.getElementById('annualIncome').value;
+    const farmerType = document.getElementById('farmerType').value;
+
+    if (!landSize) {
+        showNotification('कृपया भूमि का आकार डालें', 'warning');
+        return;
+    }
+
+    // Simple eligibility logic
+    const eligibleSchemes = [];
+
+    if (parseFloat(landSize) <= 2) {
+        eligibleSchemes.push('PM-KISAN योजना');
+        eligibleSchemes.push('प्रधानमंत्री फसल बीमा योजना');
+    }
+
+    if (income === 'below-2lakh') {
+        eligibleSchemes.push('किसान क्रेडिट कार्ड');
+        eligibleSchemes.push('कृषि यंत्र सब्सिडी');
+    }
+
+    displayEligibilityResults(eligibleSchemes);
+}
+
+function displayEligibilityResults(schemes) {
+    const resultsDiv = document.getElementById('eligibilityResults');
+    const schemesDiv = document.getElementById('eligibleSchemes');
+
+    if (schemes.length === 0) {
+        schemesDiv.innerHTML = '<p class="no-schemes">कोई योजना उपलब्ध नहीं है। कृपया अपनी जानकारी दोबारा जांचें।</p>';
+    } else {
+        schemesDiv.innerHTML = schemes.map(scheme =>
+            `<div class="eligible-scheme">✅ ${scheme}</div>`
+        ).join('');
+    }
+
+    resultsDiv.style.display = 'block';
+}
+
+function applyScheme(schemeName) {
+    // In production, this would redirect to actual application portal
+    showNotification(`${schemeName} के लिए आवेदन प्रक्रिया शुरू की गई`, 'success');
+
+    // Simulate opening application form
+    setTimeout(() => {
+        const applicationId = 'APP' + Date.now().toString().slice(-8);
+        showNotification(`आवेदन संख्या: ${applicationId}`, 'info');
+    }, 2000);
+}
+
+function getSchemeDetails(schemeName) {
+    // Show detailed information modal or redirect
+    fetch(`/api/scheme-details/${encodeURIComponent(schemeName)}`)
+        .then(response => response.json())
+        .then(data => {
+            showSchemeDetailsModal(data);
+        })
+        .catch(error => {
+            showNotification('योजना की जानकारी लोड करने में समस्या', 'error');
+        });
+}
+
+function trackApplication() {
+    const applicationId = document.getElementById('applicationId').value;
+
+    if (!applicationId) {
+        showNotification('कृपया आवेदन संख्या डालें', 'warning');
+        return;
+    }
+
+    // Mock tracking result
+    const trackingResults = document.getElementById('trackingResults');
+    trackingResults.innerHTML = `
+        <div class="tracking-result">
+            <h4>आवेदन संख्या: ${applicationId}</h4>
+            <div class="status-timeline">
+                <div class="status-step completed">
+                    <div class="step-icon">✅</div>
+                    <div class="step-content">
+                        <div class="step-title">आवेदन प्राप्त</div>
+                        <div class="step-date">15/01/2024</div>
+                    </div>
+                </div>
+                <div class="status-step completed">
+                    <div class="step-icon">✅</div>
+                    <div class="step-content">
+                        <div class="step-title">दस्तावेज सत्यापन</div>
+                        <div class="step-date">18/01/2024</div>
+                    </div>
+                </div>
+                <div class="status-step active">
+                    <div class="step-icon">⏳</div>
+                    <div class="step-content">
+                        <div class="step-title">प्रसंस्करण</div>
+                        <div class="step-date">चल रहा है</div>
+                    </div>
+                </div>
+                <div class="status-step pending">
+                    <div class="step-icon">⭕</div>
+                    <div class="step-content">
+                        <div class="step-title">अनुमोदन</div>
+                        <div class="step-date">लंबित</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+    trackingResults.style.display = 'block';
+}
+
+function showSchemeDetailsModal(data) {
+    // Implementation for showing detailed scheme information
+    // This would typically open a modal with comprehensive details
+    alert(`${data.name} की विस्तृत जानकारी यहाँ दिखाई जाएगी`);
+}
+</script>
+{% endblock %}
