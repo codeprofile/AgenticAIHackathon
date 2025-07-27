@@ -3,17 +3,14 @@
 from fastapi import FastAPI, Request, UploadFile, File, Form, HTTPException, WebSocket, WebSocketDisconnect
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse
 from pydantic import BaseModel
 from typing import List, Dict, Optional, Any
 import uvicorn
 import json
-import os
 from datetime import datetime
-import io
 import logging
 import base64
-import asyncio
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -27,8 +24,8 @@ templates = Jinja2Templates(directory="templates")
 app.mount("/static", StaticFiles(directory="static"), name="static")
 
 # Import enhanced services
-from google_adk_integration.farmbot_service import FarmBotService
-from google_adk_integration.services.market_service import MarketService
+from AgenticAIHackathon.app.google_adk_integration import FarmBotService
+from AgenticAIHackathon.app.google_adk_integration.services.market_service import MarketService
 
 # Initialize services
 farmbot_agent = FarmBotService()
@@ -873,7 +870,6 @@ from fastapi.responses import Response
 from reportlab.lib.pagesizes import letter
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib import colors
 from reportlab.lib.units import inch
 from io import BytesIO
 
